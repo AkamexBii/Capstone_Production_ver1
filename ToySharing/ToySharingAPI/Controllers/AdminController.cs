@@ -35,7 +35,6 @@ namespace ToySharingAPI.Controllers
 
         private async Task<int> GetAuthenticatedUserId()
         {
-            // Kiểm tra xem User có được xác thực không
             if (!User.Identity.IsAuthenticated)
                 throw new UnauthorizedAccessException("Người dùng chưa đăng nhập.");
 
@@ -53,7 +52,6 @@ namespace ToySharingAPI.Controllers
             return mainUser.Id;
         }
 
-        // Hàm upload ảnh lên AWS S3
         private async Task<string> UploadImageToS3(IFormFile file)
         {
             var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
@@ -71,22 +69,20 @@ namespace ToySharingAPI.Controllers
 
             return $"https://{_awsSettings.BucketName}.s3.{_awsSettings.Region}.amazonaws.com/{key}";
         }
-        // Xóa ảnh từ AWS S3
+
         private async Task DeleteImageFromS3(string imageUrl)
         {
             var uri = new Uri(imageUrl);
-            var key = uri.AbsolutePath.Substring(1); // Bỏ dấu '/' đầu tiên
+            var key = uri.AbsolutePath.Substring(1);
             await _s3Client.DeleteObjectAsync(_awsSettings.BucketName, key);
         }
 
-        // Xem tất cả banner
         [HttpGet("banners")]
         public async Task<ActionResult<IEnumerable<Banner>>> GetBanners()
         {
             return await _context.Banners.ToListAsync();
         }
 
-        // Xem banner theo ID
         [HttpGet("banners/{id}")]
         public async Task<ActionResult<Banner>> GetBanner(int id)
         {
@@ -98,7 +94,6 @@ namespace ToySharingAPI.Controllers
             return banner;
         }
 
-        // Thêm banner mới
         [HttpPost("banners")]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<Banner>> CreateBanner([FromForm] CreateBannerDTO bannerDto)
@@ -126,7 +121,6 @@ namespace ToySharingAPI.Controllers
             }
         }
 
-        // Sửa banner
         [HttpPut("banners/{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateBanner(int id, [FromForm] UpdateBannerDTO bannerDto)
@@ -160,7 +154,6 @@ namespace ToySharingAPI.Controllers
             return NoContent();
         }
 
-        // Xóa banner
         [HttpDelete("banners/{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteBanner(int id)
@@ -181,14 +174,12 @@ namespace ToySharingAPI.Controllers
             return NoContent();
         }
 
-        // Xem tất cả category
         [HttpGet("categories")]
         public async Task<ActionResult<IEnumerable<Category>>> GetCategories()
         {
             return await _context.Categories.ToListAsync();
         }
 
-        // Xem category theo ID
         [HttpGet("categories/{id}")]
         public async Task<ActionResult<Category>> GetCategory(int id)
         {
@@ -200,16 +191,40 @@ namespace ToySharingAPI.Controllers
             return category;
         }
 
-        // Thêm category mới
+        [HttpGet("categories/{id}/products")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<IEnumerable<Product>>> GetProductsByCategoryId(int id)
+        {
+            var category = await _context.Categories.FindAsync(id);
+            if (category == null)
+            {
+                return NotFound(new { message = "Không tìm thấy danh mục." });
+            }
+
+            var products = await _context.Products
+                .Where(p => p.CategoryId == id)
+                .ToListAsync();
+
+            return Ok(products);
+        }
+
         [HttpPost("categories")]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<Category>> CreateCategory([FromBody] CreateCategoryDTO categoryDto)
         {
             try
             {
+                // Check for duplicate category name
+                var existingCategory = await _context.Categories
+                    .FirstOrDefaultAsync(c => c.CategoryName.ToLower() == categoryDto.CategoryName.Trim().ToLower());
+                if (existingCategory != null)
+                {
+                    return Conflict(new { message = "Danh mục đã tồn tại." });
+                }
+
                 var category = new Category
                 {
-                    CategoryName = categoryDto.CategoryName,
+                    CategoryName = categoryDto.CategoryName.Trim(),
                 };
                 _context.Categories.Add(category);
                 await _context.SaveChangesAsync();
@@ -221,7 +236,6 @@ namespace ToySharingAPI.Controllers
             }
         }
 
-        // Sửa category
         [HttpPut("categories/{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateCategory(int id, [FromBody] UpdateCategoryDTO categoryDto)
@@ -234,14 +248,20 @@ namespace ToySharingAPI.Controllers
 
             if (!string.IsNullOrEmpty(categoryDto.CategoryName))
             {
-                category.CategoryName = categoryDto.CategoryName;
+                // Check for duplicate category name (excluding current category)
+                var existingCategory = await _context.Categories
+                    .FirstOrDefaultAsync(c => c.CategoryName.ToLower() == categoryDto.CategoryName.Trim().ToLower() && c.CategoryId != id);
+                if (existingCategory != null)
+                {
+                    return Conflict(new { message = "Danh mục đã tồn tại." });
+                }
+                category.CategoryName = categoryDto.CategoryName.Trim();
             }
 
             await _context.SaveChangesAsync();
             return NoContent();
         }
 
-        // Xóa category
         [HttpDelete("categories/{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteCategory(int id)
@@ -249,7 +269,13 @@ namespace ToySharingAPI.Controllers
             var category = await _context.Categories.FindAsync(id);
             if (category == null)
             {
-                return NotFound("Không tìm thấy danh mục.");
+                return NotFound(new { message = "Không tìm thấy danh mục." });
+            }
+
+            var productCount = await _context.Products.CountAsync(p => p.CategoryId == id);
+            if (productCount > 0)
+            {
+                return BadRequest(new { message = "Không thể xóa danh mục vì đã có đồ chơi sử dụng danh mục này." });
             }
 
             _context.Categories.Remove(category);

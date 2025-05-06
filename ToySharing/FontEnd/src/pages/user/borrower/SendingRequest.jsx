@@ -50,8 +50,7 @@ const SendingRequest = () => {
     { value: "", label: "Tất cả trạng thái" },
     { value: "0", label: "Đang chờ chấp nhận" },
     { value: "1", label: "Chấp nhận, chưa thanh toán" },
-    { value: "2", label: "Chấp nhận, đã thanh toán" },
-    { value: "8", label: "Chấp nhận, không mất phí" },
+    { value: "2,8", label: "Chấp nhận, chưa lấy đồ chơi" },
     { value: "3", label: "Đã lấy" },
   ];
 
@@ -151,7 +150,6 @@ const SendingRequest = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Function to fetch toy details and include request status
   const handleViewDetail = async (toyId, requestStatus, confirmReturn) => {
     try {
       const token = getAuthToken();
@@ -175,8 +173,8 @@ const SendingRequest = () => {
         suitableAge: response.data.suitableAge || "Không xác định",
         price: parseFloat(response.data.price) || 0,
         description: response.data.description || "Không có mô tả",
-        requestStatus: requestStatus, // Store request status
-        confirmReturn: confirmReturn || 0, // Store confirmReturn
+        requestStatus: requestStatus,
+        confirmReturn: confirmReturn || 0,
       });
       setShowDetailModal(true);
     } catch (error) {
@@ -185,9 +183,12 @@ const SendingRequest = () => {
     }
   };
 
-  // Sorting logic for requests
   const sortedRequests = requests
-    .filter((request) => [0, 1, 2, 8, 3].includes(request.status) && (selectedStatus === "" || request.status.toString() === selectedStatus))
+    .filter((request) => {
+      if (selectedStatus === "") return [0, 1, 2, 8, 3].includes(request.status);
+      if (selectedStatus === "2,8") return [2, 8].includes(request.status);
+      return request.status.toString() === selectedStatus;
+    })
     .sort((a, b) => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -347,6 +348,7 @@ const SendingRequest = () => {
     setSelectedRequestId(id);
     setShowPickedUpModal(true);
   };
+
   const handlePickedUpNonfeeClick = (id) => {
     setSelectedRequestId(id);
     setShowPickedUpNonfeeModal(true);
@@ -474,10 +476,10 @@ const SendingRequest = () => {
         prev.map((req) =>
           req.requestId === requestId
             ? {
-              ...req,
-              confirmReturn: req.confirmReturn | 1,
-              status: (req.confirmReturn | 1) === 3 ? 4 : req.status,
-            }
+                ...req,
+                confirmReturn: req.confirmReturn | 1,
+                status: (req.confirmReturn | 1) === 3 ? 4 : req.status,
+              }
             : req
         )
       );
@@ -529,7 +531,11 @@ const SendingRequest = () => {
       setCancelReason("");
     } catch (error) {
       console.error("Lỗi khi hủy yêu cầu:", error);
-      toast.error("Không thể hủy yêu cầu!");
+      let errorMessage = "Không thể hủy yêu cầu!";
+      if (error.response) {
+        errorMessage = error.response.data.message || errorMessage;
+      }
+      toast.error(errorMessage);
     }
   };
 
@@ -620,34 +626,30 @@ const SendingRequest = () => {
                                 ? "pending"
                                 : request.status === 1
                                   ? "accepted"
-                                  : request.status === 2
-                                    ? "paid"
-                                    : request.status === 8
-                                      ? "nonfee"
-                                      : request.status === 3
-                                        ? "picked-up"
-                                        : request.status === 4
-                                          ? "completed"
-                                          : ""
+                                  : request.status === 2 || request.status === 8
+                                    ? "accepted-not-picked"
+                                    : request.status === 3
+                                      ? "picked-up"
+                                      : request.status === 4
+                                        ? "completed"
+                                        : ""
                             }
                           >
                             {request.status === 0
                               ? "Đang chờ chấp nhận"
                               : request.status === 1
                                 ? "Chấp nhận, chưa thanh toán"
-                                : request.status === 2
-                                  ? "Chấp nhận, đã thanh toán"
-                                  : request.status === 8
-                                    ? "Chấp nhận, không mất phí"
-                                    : request.status === 3
-                                      ? (request.confirmReturn & 1) !== 0
-                                        ? "Bạn đã xác nhận trả, chờ người cho mượn"
-                                        : (request.confirmReturn & 2) !== 0
-                                          ? "Chờ bạn xác nhận trả"
-                                          : "Đã lấy, chưa xác nhận trả"
-                                      : request.status === 4
-                                        ? "Hoàn thành"
-                                        : "Không xác định"}
+                                : request.status === 2 || request.status === 8
+                                  ? "Chấp nhận, chưa lấy đồ chơi"
+                                  : request.status === 3
+                                    ? (request.confirmReturn & 1) !== 0
+                                      ? "Bạn đã xác nhận trả, chờ người cho mượn"
+                                      : (request.confirmReturn & 2) !== 0
+                                        ? "Chờ bạn xác nhận trả"
+                                        : "Đã lấy, chưa xác nhận trả"
+                                    : request.status === 4
+                                      ? "Hoàn thành"
+                                      : "Không xác định"}
                           </span>
                         </Card.Text>
                         <div className="lender-info d-flex align-items-center mb-2">
@@ -710,54 +712,33 @@ const SendingRequest = () => {
                               </Button>
                             </>
                           )}
-                          {(request.status === 2) && (
+                          {(request.status === 2 || request.status === 8) && (
                             <>
                               <Button
                                 variant="primary"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handlePickedUpClick(request.requestId);
+                                  request.status === 2
+                                    ? handlePickedUpClick(request.requestId)
+                                    : handlePickedUpNonfeeClick(request.requestId);
                                 }}
                                 className="action-btn"
                                 disabled={request.status === 3}
                               >
                                 Đã lấy
                               </Button>
-                              <Button
-                                variant="danger"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleCancelClick(request.requestId);
-                                }}
-                                className="action-btn"
-                              >
-                                Hủy
-                              </Button>
-                            </>
-                          )}
-                          {(request.status === 8) && (
-                            <>
-                              <Button
-                                variant="primary"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handlePickedUpNonfeeClick(request.requestId);
-                                }}
-                                className="action-btn"
-                                disabled={request.status === 3}
-                              >
-                                Đã lấy
-                              </Button>
-                              <Button
-                                variant="danger"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleCancelClick(request.requestId);
-                                }}
-                                className="action-btn"
-                              >
-                                Hủy
-                              </Button>
+                              {request.status === 8 && (
+                                <Button
+                                  variant="danger"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleCancelClick(request.requestId);
+                                  }}
+                                  className="action-btn"
+                                >
+                                  Hủy
+                                </Button>
+                              )}
                             </>
                           )}
                           {request.status === 3 && (
@@ -782,7 +763,7 @@ const SendingRequest = () => {
                               : request.status === 2
                                 ? "Hãy đến lấy đồ chơi đúng ngày và bấm 'Đã lấy' để cập nhật trạng thái."
                                 : request.status === 8
-                                  ? "Hãy đến lấy đồ chơi đúng ngày và bấm 'Đã lấy' để cập nhật trạng thái."
+                                  ? "Hãy đến lấy đồ chơi đúng ngày và bấm 'Đã lấy' để cập nhật trạng thái. Bạn có thể hủy yêu cầu nếu chưa lấy đồ."
                                   : request.status === 3
                                     ? (request.confirmReturn & 1) !== 0
                                       ? "Đã xác nhận trả, đang chờ người cho mượn xác nhận."
@@ -962,25 +943,21 @@ const SendingRequest = () => {
                       ? "pending"
                       : selectedToy.requestStatus === 1
                         ? "accepted"
-                        : selectedToy.requestStatus === 2
-                          ? "paid"
-                          : selectedToy.requestStatus === 8
-                            ? "nonfee"
-                            : selectedToy.requestStatus === 3
-                              ? "picked-up"
-                              : selectedToy.requestStatus === 4
-                                ? "completed"
-                                : ""
+                        : selectedToy.requestStatus === 2 || selectedToy.requestStatus === 8
+                          ? "accepted-not-picked"
+                          : selectedToy.requestStatus === 3
+                            ? "picked-up"
+                            : selectedToy.requestStatus === 4
+                              ? "completed"
+                              : ""
                   }
                 >
                   {selectedToy.requestStatus === 0
                     ? "Đang chờ chấp nhận"
                     : selectedToy.requestStatus === 1
                       ? "Chấp nhận, chưa thanh toán"
-                      : selectedToy.requestStatus === 2
-                        ? "Chấp nhận, đã thanh toán"
-                        : selectedToy.requestStatus === 8
-                          ? "Chấp nhận, không mất phí"
+                      : selectedToy.requestStatus === 2 || selectedToy.requestStatus === 8
+                        ? "Chấp nhận, chưa lấy đồ chơi"
                         : selectedToy.requestStatus === 3
                           ? (selectedToy.confirmReturn & 1) !== 0
                             ? "Bạn đã xác nhận trả, chờ người cho mượn"
@@ -998,17 +975,23 @@ const SendingRequest = () => {
           )}
         </Modal.Body>
         <Modal.Footer>
-          <Button
-            variant="secondary"
-            className="action-btn"
-            onClick={() => setShowDetailModal(false)}
-          >
+          <Button variant="secondary" onClick={() => setShowDetailModal(false)}>
             Đóng
           </Button>
         </Modal.Footer>
       </Modal>
 
-      <ToastContainer position="top-right" autoClose={3000} />
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
     </div>
   );
 };

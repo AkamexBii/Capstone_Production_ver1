@@ -55,6 +55,7 @@ namespace ToySharingAPI.Controllers
 
             return mainUser.Id;
         }
+
         [HttpPut("{requestId}/confirm-return")]
         [Authorize(Roles = "User")]
         public async Task<IActionResult> ConfirmReturn(int requestId)
@@ -113,11 +114,11 @@ namespace ToySharingAPI.Controllers
                     var productName = request.Product?.Name ?? "Sản phẩm không xác định";
                     await CreateNotification(
                         borrowerId,
-                        $"Yêu cầu mượn sản phẩm '{productName}' đã hoàn thành." , 5
+                        $"Yêu cầu mượn sản phẩm '{productName}' đã hoàn thành.", 5
                     );
                     await CreateNotification(
                         ownerId,
-                        $"Yêu cầu mượn sản phẩm '{productName}' đã hoàn thành." , 3
+                        $"Yêu cầu mượn sản phẩm '{productName}' đã hoàn thành.", 3
                     );
                 }
                 else
@@ -145,7 +146,7 @@ namespace ToySharingAPI.Controllers
                 });
             }
         }
-        // Tạo một yêu cầu mượn mới (RentRequest) với trạng thái mặc định là 0 (pending). Gửi thông báo cho chủ sở hữu đồ chơi.
+
         [HttpPost]
         [Authorize(Roles = "User")]
         public async Task<ActionResult<RequestDTO>> CreateRequest([FromForm] CreateRequestDTO formData)
@@ -201,7 +202,7 @@ namespace ToySharingAPI.Controllers
                     BorrowerAvatar = borrower?.Avatar,
                     OwnerId = product.UserId,
                     OwnerName = product.User.Displayname,
-                    OwnerAvatar = product.User.Avatar, // Thêm OwnerAvatar
+                    OwnerAvatar = product.User.Avatar,
                     Status = request.Status,
                     DepositAmount = request.DepositAmount,
                     RetalFee = request.RentalFee
@@ -215,7 +216,6 @@ namespace ToySharingAPI.Controllers
             }
         }
 
-        // Cập nhật trạng thái của một yêu cầu mượn (chấp nhận: status = 1, từ chối: status = 5).
         [HttpPut("{requestId}/status")]
         [Authorize(Roles = "User")]
         public async Task<IActionResult> UpdateRequestStatus(int requestId, [FromBody] UpdateRequestStatusDTO requestDto)
@@ -259,13 +259,12 @@ namespace ToySharingAPI.Controllers
 
                     request.Product.Available = 1;
 
-                    // Tạo bản ghi History với trạng thái pending (0)
                     var history = new History
                     {
                         RequestId = request.RequestId,
                         UserId = request.UserId,
                         ProductId = request.ProductId,
-                        Status = 0, // Trạng thái pending
+                        Status = 0,
                         Rating = null,
                         Message = null,
                         ReturnDate = DateTime.Now
@@ -278,18 +277,17 @@ namespace ToySharingAPI.Controllers
                     var productName = request.Product.Name;
                     await CreateNotification(borrowerId, $"Yêu cầu mượn '{productName}' của bạn đã được chấp nhận.", 4);
                 }
-                else if (requestDto.NewStatus == 5) // Từ chối yêu cầu
+                else if (requestDto.NewStatus == 5)
                 {
                     request.Status = 5;
                     request.Product.Available = 0;
 
-                    // Tạo bản ghi History với trạng thái canceled (2)
                     var history = new History
                     {
                         RequestId = request.RequestId,
                         UserId = request.UserId,
                         ProductId = request.ProductId,
-                        Status = 2, // Trạng thái canceled
+                        Status = 2,
                         Rating = null,
                         Message = "Yêu cầu bị từ chối bởi chủ sở hữu",
                         ReturnDate = DateTime.Now
@@ -377,7 +375,6 @@ namespace ToySharingAPI.Controllers
             }
         }
 
-        // Sửa endpoint toy-request để trả về cả status = 1 và 2 (Accepted và PickedUp)
         [HttpGet("toy-request")]
         [Authorize(Roles = "User")]
         public async Task<ActionResult<IEnumerable<object>>> GetToyRequestList()
@@ -406,8 +403,8 @@ namespace ToySharingAPI.Controllers
                     returnDate = r.ReturnDate,
                     requestDate = r.RequestDate,
                     message = r.Message,
-                    confirmReturn = r.ConfirmReturn, // Thêm confirmReturn
-                    status = r.Status, // Trả về status trực tiếp
+                    confirmReturn = r.ConfirmReturn,
+                    status = r.Status,
                     image = r.Product.Images.FirstOrDefault() != null ? r.Product.Images.FirstOrDefault().Path : null,
                     depositAmount = r.DepositAmount,
                     rentalFee = r.RentalFee,
@@ -418,7 +415,6 @@ namespace ToySharingAPI.Controllers
             return Ok(requests);
         }
 
-        // Các endpoint khác giữ nguyên...
         [HttpGet("user")]
         [Authorize(Roles = "User")]
         public async Task<ActionResult<IEnumerable<RequestDTO>>> GetRequestsByUserId()
@@ -456,6 +452,7 @@ namespace ToySharingAPI.Controllers
 
             return Ok(requests);
         }
+
         [HttpGet("history")]
         [Authorize(Roles = "User")]
         public async Task<ActionResult<IEnumerable<HistoryDTO>>> GetRequestHistory()
@@ -473,7 +470,7 @@ namespace ToySharingAPI.Controllers
                 .Select(h => new HistoryDTO
                 {
                     RequestId = h.RequestId,
-                    UserId = h.Product.UserId, // Owner's UserId
+                    UserId = h.Product.UserId,
                     BorrowerName = null,
                     BorrowerAvatar = null,
                     ProductId = h.ProductId,
@@ -545,7 +542,7 @@ namespace ToySharingAPI.Controllers
                 .Include(r => r.User)
                 .Include(r => r.History)
                 .Where(r => r.Product.UserId == mainUserId &&
-                            (r.Status == 0 || r.Status == 1 || r.Status == 2 || r.Status == 3) || r.Status == 8)
+                            (r.Status == 0 || r.Status == 1 || r.Status == 2 || r.Status == 3 || r.Status == 8))
                 .Select(r => new RequestDTO
                 {
                     RequestId = r.RequestId,
@@ -578,7 +575,7 @@ namespace ToySharingAPI.Controllers
                 r.ProductName,
                 r.Price,
                 r.Image,
-                Status = r.Status, // Trả về số (0, 1, 2, 3, 4, 7) thay vì chuỗi
+                Status = r.Status,
                 r.ConfirmReturn,
                 r.RequestDate,
                 r.RentDate,
@@ -626,7 +623,6 @@ namespace ToySharingAPI.Controllers
             return Ok(requests);
         }
 
-        // Update borrow-history to ensure correct status mapping
         [HttpGet("borrow-history")]
         [Authorize(Roles = "User")]
         public async Task<ActionResult<IEnumerable<BorrowHistoryDTO>>> GetBorrowHistory()
@@ -745,10 +741,10 @@ namespace ToySharingAPI.Controllers
             {
                 var borrowerName = request.User?.Displayname ?? "Không xác định";
 
-                request.Status = 4; // Completed
-                history.Status = 1; // Completed
+                request.Status = 4;
+                history.Status = 1;
                 history.ReturnDate = DateTime.Now;
-                product.Available = 0; // Product available again
+                product.Available = 0;
 
                 await _context.SaveChangesAsync();
 
@@ -767,7 +763,7 @@ namespace ToySharingAPI.Controllers
                     ProductId = history.ProductId,
                     ProductName = product.Name,
                     Status = history.Status,
-                    Rating = history.Rating, // Will be null
+                    Rating = history.Rating,
                     Message = history.Message,
                     ReturnDate = history.ReturnDate
                 });
@@ -805,39 +801,22 @@ namespace ToySharingAPI.Controllers
             if (request.UserId != mainUserId)
                 return Forbid("Bạn không có quyền hủy yêu cầu này.");
 
-            if (request.Status != 0 && request.Status != 1)
-                return BadRequest("Chỉ có thể hủy từ trạng thái 'chưa chấp nhận' hoặc 'chưa thanh toán'.");
+            if (request.Status != 0 && request.Status != 1 && request.Status !=2 && request.Status != 8)
+                return BadRequest("Chỉ có thể hủy từ trạng thái 'chưa chấp nhận', 'chưa thanh toán', hoặc 'chấp nhận, không mất phí'.");
 
             var history = await _context.Histories
                 .FirstOrDefaultAsync(h => h.RequestId == requestId);
 
-            if (history == null)
-                try
-                {
-                    request.Status = 6;
-                    await _context.SaveChangesAsync();
-                }
-                catch (Exception ex)
-                {
-                    return StatusCode(500, new
-                    {
-                        message = "Lỗi khi hủy yêu cầu.",
-                        error = ex.Message,
-                        stackTrace = ex.StackTrace
-                    });
-                }
-
             try
             {
+                request.Status = 6;
+                request.Product.Available = 0;
+
                 if (history != null)
                 {
-                    request.Status = 6;
                     history.Status = 2; // Canceled
                     history.Message = formData.Reason;
                     history.ReturnDate = DateTime.Now;
-                    request.Product.Available = 0;
-
-                    await _context.SaveChangesAsync();
                 }
                 else
                 {
@@ -852,12 +831,14 @@ namespace ToySharingAPI.Controllers
                     };
                     _context.Histories.Add(history);
                 }
+
+                await _context.SaveChangesAsync();
+
                 var ownerId = request.Product.UserId;
                 var productName = request.Product.Name ?? "Sản phẩm không xác định";
                 await CreateNotification(ownerId, $"Yêu cầu mượn sản phẩm '{productName}' đã bị hủy bởi người mượn. Lý do: {formData.Reason}", 3);
 
                 return Ok(new { message = "Hủy yêu cầu thành công." });
-
             }
             catch (Exception ex)
             {
@@ -869,6 +850,7 @@ namespace ToySharingAPI.Controllers
                 });
             }
         }
+
         [HttpPut("history/{requestId}/rate")]
         [Authorize(Roles = "User")]
         public async Task<IActionResult> RateHistory(int requestId, [FromBody] CompleteRequestDTO rateDto)
@@ -920,6 +902,7 @@ namespace ToySharingAPI.Controllers
                 });
             }
         }
+
         [HttpPut("{requestId}/mark-not-returned")]
         [Authorize(Roles = "User")]
         public async Task<IActionResult> MarkNotReturned(int requestId)
@@ -959,7 +942,6 @@ namespace ToySharingAPI.Controllers
 
             try
             {
-                // Ensure History exists
                 if (request.History == null)
                 {
                     var history = new History
@@ -967,17 +949,17 @@ namespace ToySharingAPI.Controllers
                         RequestId = request.RequestId,
                         UserId = request.UserId,
                         ProductId = request.ProductId,
-                        Status = 0, // Pending
+                        Status = 0,
                         ReturnDate = currentDate
                     };
                     _context.Histories.Add(history);
                     request.History = history;
                 }
 
-                request.Status = 7; // Not Returned
-                request.History.Status = 1; // Mark history as Not Returned
+                request.Status = 7;
+                request.History.Status = 1;
                 request.History.ReturnDate = currentDate;
-                request.Product.Available = 2; // Make product available again
+                request.Product.Available = 2;
 
                 await _context.SaveChangesAsync();
 
@@ -987,14 +969,13 @@ namespace ToySharingAPI.Controllers
 
                 await CreateNotification(
                     borrowerId,
-                    $"Yêu cầu mượn sản phẩm '{productName}' đã bị đánh dấu là chưa trả do quá hạn 3 ngày." , 4
+                    $"Yêu cầu mượn sản phẩm '{productName}' đã bị đánh dấu là chưa trả do quá hạn 3 ngày.", 4
                 );
 
                 return Ok(new { message = "Đã đánh dấu yêu cầu là chưa trả thành công." });
             }
             catch (DbUpdateException dbEx)
             {
-                // Log detailed error for debugging
                 Console.WriteLine($"DbUpdateException: {dbEx.InnerException?.Message ?? dbEx.Message}");
                 return StatusCode(500, new
                 {
@@ -1005,7 +986,6 @@ namespace ToySharingAPI.Controllers
             }
             catch (Exception ex)
             {
-                // Log detailed error for debugging
                 Console.WriteLine($"Exception: {ex.Message}\nStackTrace: {ex.StackTrace}");
                 return StatusCode(500, new
                 {
