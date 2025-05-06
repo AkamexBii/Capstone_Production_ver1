@@ -1,0 +1,190 @@
+@use "sass:color";
+
+$primary-color: #ff8a80;      // Màu hồng pastel
+$secondary-color: #ffd180;    // Màu vàng nhạt pastel (not used)
+$btn-bg-color: #ffb74d;       // Màu cam nhẹ cho nút
+$btn-hover-bg-color: color.scale($btn-bg-color, $lightness: -10%);
+$font-family-child: "Comic Sans MS", "Comic Sans", cursive, sans-serif;
+
+.login-wrapper {
+  font-family: $font-family-child;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  .login-container {
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 2px solid $btn-bg-color;
+    margin: 0 auto; // Center horizontally
+    max-width: 900px; // Balanced max-width
+    width: 100%; // Full width within parent
+
+    .banner {
+      height: 500px; // Fixed height
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover; // Cover without distortion
+      }
+    }
+
+    .login-form-container {
+      background: #fff;
+      padding: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 500px; // Match banner height
+
+      .login-form {
+        width: 100%;
+        max-width: 400px;
+
+        h2 {
+          text-align: center;
+          margin-bottom: 1.5rem;
+          color: #333;
+          font-size: 2rem;
+        }
+
+        .form-group {
+          margin-bottom: 1rem;
+
+          label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-size: 1rem;
+          }
+
+          input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fff;
+            color: #000;
+            font-size: 1rem;
+
+            &::placeholder {
+              color: #000;
+              opacity: 0.3;
+            }
+
+            &.is-invalid {
+              border-color: #dc3545;
+              &:focus {
+                border-color: #dc3545;
+                box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+              }
+            }
+          }
+
+          .invalid-feedback {
+            color: #dc3545;
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+          }
+        }
+
+        .form-options {
+          margin-bottom: 1rem;
+
+          .remember-me {
+            display: flex;
+            align-items: center;
+
+            input {
+              margin-right: 0.5rem;
+            }
+
+            label {
+              font-size: 0.9rem;
+              color: #333;
+            }
+          }
+        }
+
+        .forgot-password {
+          text-align: right;
+          margin-bottom: 1rem;
+
+          a {
+            font-size: 0.9rem;
+            color: $btn-bg-color;
+            text-decoration: none;
+
+            &:hover {
+              text-decoration: underline;
+            }
+          }
+        }
+
+        .btn {
+          width: 100%;
+          padding: 0.75rem;
+          border: none;
+          border-radius: 5px;
+          font-weight: bold;
+          cursor: pointer;
+          transition: background 0.3s ease;
+          font-size: 1rem;
+          margin-bottom: 1rem;
+        }
+
+        .login-btn {
+          background: $btn-hover-bg-color;
+          color: #fff;
+
+          &:hover {
+            background: $btn-bg-color;
+          }
+        }
+
+        .google-btn {
+          background: color.scale($primary-color, $lightness: -10%);
+          color: #fff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          .google-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 0.5rem;
+          }
+
+          &:hover {
+            background: $primary-color;
+          }
+        }
+
+        .register-link {
+          text-align: center;
+          font-size: 0.9rem;
+          color: #333;
+
+          span {
+            margin-right: 0.5rem;
+          }
+
+          a {
+            color: $btn-bg-color;
+            text-decoration: none;
+
+            &:hover {
+              text-decoration: underline;
+            }
+          }
+        }
+      }
+    }
+  }
+}

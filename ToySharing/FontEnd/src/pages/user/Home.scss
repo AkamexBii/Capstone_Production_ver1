@@ -1,0 +1,283 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+
+$primary-color: #ff6f61;
+$primary-hover: #e65b50;
+$success-color: #28a745;
+$success-hover: #218838;
+$danger-color: #dc3545;
+$danger-hover: #c82333;
+
+.home-wrapper {
+  background-color: #f7f9fc;
+  font-family: 'Roboto', sans-serif;
+  color: #333;
+}
+
+.home-page {
+  padding-bottom: 40px;
+
+  .container-fluid {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  .row {
+    flex: 1;
+  }
+
+  .banner-section {
+    margin-bottom: 2rem;
+
+    .banner-clickable {
+      position: relative;
+    }
+
+    .banner-image {
+      height: 400px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    @media (max-width: 768px) {
+      .banner-image {
+        height: 200px;
+      }
+    }
+  }
+
+  .main-content {
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .section-title {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: $primary-color;
+    margin-bottom: 1.5rem;
+  }
+
+  .filter-and-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    margin: 10px;
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+
+  .filter-panel {
+    width: 100%;
+    max-width: 100%;
+    transition: max-height 0.3s ease-in-out;
+    overflow: hidden;
+
+    &.show {
+      max-height: 500px;
+    }
+
+    &:not(.show) {
+      max-height: 40px;
+    }
+
+    .action-btn {
+      margin-bottom: 10px;
+    }
+
+    .filter-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+
+      .form-group {
+        flex: 1;
+        min-width: 150px;
+
+        label {
+          font-size: 0.9rem;
+          color: #333;
+          margin-bottom: 5px;
+        }
+
+        .form-control {
+          font-size: 0.9rem;
+          padding: 8px;
+          border-radius: 5px;
+          border: 1px solid #ddd;
+          height: 38px;
+
+          &:focus {
+            border-color: $primary-color;
+            box-shadow: 0 0 5px rgba($primary-color, 0.3);
+          }
+        }
+      }
+    }
+  }
+
+  .toy-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.3s;
+
+    &:hover {
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .image-frame {
+      width: 100%;
+      height: 200px;
+      overflow: hidden;
+      border-radius: 8px 8px 0 0;
+      border-bottom: 1px solid #ddd;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #f8f8f8;
+    }
+
+    .toy-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .card-body {
+      padding: 15px;
+    }
+
+    .toy-name {
+      font-family: 'Roboto', sans-serif;
+      font-size: 1.5rem;
+      color: $primary-color;
+      margin-bottom: 10px;
+    }
+
+    .toy-price,
+    .toy-status,
+    .toy-condition,
+    .toy-distance {
+      font-size: 1rem;
+      margin-bottom: 5px;
+      color: #333;
+    }
+
+    .toy-status {
+      .available {
+        color: $success-color;
+      }
+      .unavailable {
+        color: $danger-color;
+      }
+    }
+
+    .lender-info {
+      .lender-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-right: 10px;
+      }
+
+      .lender-link {
+        color: $primary-color;
+        font-size: 1rem;
+
+        &:hover {
+          color: $primary-hover;
+        }
+      }
+    }
+
+    .toy-actions {
+      margin-top: 20px;
+
+      .action-btn {
+        min-width: 120px;
+        padding: 8px 16px;
+        font-size: 1rem;
+        border-radius: 5px;
+
+        &.btn-primary {
+          background-color: $primary-color;
+          border-color: $primary-color;
+
+          &:hover {
+            background-color: $primary-hover;
+            border-color: $primary-hover;
+          }
+        }
+
+        &.btn-secondary {
+          background-color: #6c757d;
+          border-color: #6c757d;
+
+          &:hover {
+            background-color: #5a6268;
+            border-color: #5a6268;
+          }
+        }
+      }
+    }
+  }
+
+  .no-results {
+    font-size: 1.2rem;
+    color: #6c757d;
+    margin-top: 20px;
+  }
+
+  .view-more-btn {
+    margin-top: 1rem;
+    font-size: 1rem;
+    padding: 10px 20px;
+    border-radius: 8px;
+  }
+
+  .action-btn {
+    min-width: 120px;
+    padding: 5px 16px;
+    font-size: 1rem;
+    border-radius: 5px;
+
+    &.btn-outline-primary {
+      border-color: $primary-color;
+      color: $primary-color;
+
+      &:hover {
+        background-color: $primary-color;
+        color: #fff;
+      }
+    }
+  }
+
+  .modal {
+    .image-frame {
+      width: 100%;
+      height: 200px;
+      overflow: hidden;
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #f8f8f8;
+    }
+
+    .detail-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+  }
+}

@@ -1,0 +1,55 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+
+.admin-page.statistic {
+  background-color: #f7f9fc;
+  font-family: 'Roboto', sans-serif;
+  color: #333;
+  padding-bottom: 40px;
+
+  .main-content {
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 30px;
+    min-height: calc(100vh - 80px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .guide-content {
+    width: 70vw;
+    margin: 0 auto;
+    
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 20px;
+      color: #ff6f61;
+      text-align: center;
+    }
+    p {
+      font-size: 1.1rem;
+      line-height: 1.6;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    ol {
+      margin-left: 0px;
+      li {
+        margin-bottom: 10px;
+        font-size: 1.1rem;
+      }
+      text-align: left;
+    }
+    .charts-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      align-items: center;
+      
+      .chart-card {
+        width: 100%;
+        max-width: 650px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+      }
+    }
+  }
+}

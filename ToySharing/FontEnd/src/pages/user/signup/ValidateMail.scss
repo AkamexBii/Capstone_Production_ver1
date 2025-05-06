@@ -1,0 +1,124 @@
+@use "sass:color";
+
+$primary-color: #ff8a80;      // Màu hồng pastel
+$secondary-color: #ffd180;    // Màu vàng nhạt pastel (not used)
+$btn-bg-color: #ffb74d;       // Màu cam nhẹ cho nút
+$btn-hover-bg-color: color.scale($btn-bg-color, $lightness: -10%);
+$font-family-child: "Comic Sans MS", "Comic Sans", cursive, sans-serif;
+
+.signup-wrapper {
+  font-family: $font-family-child;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; // Center content vertically
+
+  .signup-container {
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 2px solid $btn-bg-color;
+    margin: 0 auto; // Center horizontally
+    max-width: 900px; // Balanced max-width
+    width: 100%; // Full width within parent
+
+    .banner {
+      height: 500px; // Fixed height
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover; // Cover without distortion
+      }
+    }
+
+    .signup-form-container {
+      background: #fff;
+      padding: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 500px; // Match banner height
+
+      .signup-form {
+        width: 100%;
+        max-width: 400px;
+
+        h2 {
+          text-align: center;
+          margin-bottom: 1.5rem;
+          color: #333;
+          font-size: 2rem;
+        }
+
+        p {
+          text-align: center;
+          margin-bottom: 1rem;
+          color: #333;
+          font-size: 1rem;
+
+          strong {
+            color: #d61f1f;
+          }
+        }
+
+        .form-group {
+          margin-bottom: 1rem;
+
+          label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #d61f1f;
+            font-size: 1rem;
+          }
+
+          input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fff;
+            color: #000;
+            font-size: 1rem;
+
+            &::placeholder {
+              color: #000;
+              opacity: 0.3;
+            }
+          }
+        }
+
+        .error-text {
+          color: #dc3545;
+          font-size: 0.9rem;
+          margin-bottom: 1rem;
+          text-align: center;
+        }
+
+        .btn {
+          width: 100%;
+          padding: 0.75rem;
+          border: none;
+          border-radius: 5px;
+          font-weight: bold;
+          cursor: pointer;
+          transition: background 0.3s ease;
+          font-size: 1rem;
+          margin-bottom: 1rem;
+        }
+
+        .verify-btn {
+          background: $btn-hover-bg-color;
+          color: #fff;
+
+          &:hover {
+            background: $btn-bg-color;
+          }
+        }
+      }
+    }
+  }
+}
