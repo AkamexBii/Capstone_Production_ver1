@@ -120,6 +120,31 @@ namespace ToySharingAPI.Controllers
                         ownerId,
                         $"Yêu cầu mượn sản phẩm '{productName}' đã hoàn thành.", 3
                     );
+                    var transactionforborrower = new Transaction
+                    {
+                        RequestId = request.RequestId,
+                        TransactionType = 1, // Refund
+                        Amount = request.DepositAmount,
+                        FromUserId = null,
+                        ToUserId = request.UserId, // borrower
+                        Status = 0, // Pending
+                        CreatedAt = DateTime.Now,
+                        UpdatedAt = DateTime.Now
+                    };
+                    var transactionforowner = new Transaction
+                    {
+                        RequestId = request.RequestId,
+                        TransactionType = 1, // Refund
+                        Amount = request.RentalFee,
+                        FromUserId = null,
+                        ToUserId = request.Product.UserId, // owner
+                        Status = 0, // Pending
+                        CreatedAt = DateTime.Now,
+                        UpdatedAt = DateTime.Now
+                    };
+                    _context.Transactions.Add(transactionforborrower);
+                    _context.Transactions.Add(transactionforowner);
+                    await _context.SaveChangesAsync();
                 }
                 else
                 {
@@ -801,14 +826,29 @@ namespace ToySharingAPI.Controllers
             if (request.UserId != mainUserId)
                 return Forbid("Bạn không có quyền hủy yêu cầu này.");
 
-            if (request.Status != 0 && request.Status != 1 && request.Status !=2 && request.Status != 8)
-                return BadRequest("Chỉ có thể hủy từ trạng thái 'chưa chấp nhận', 'chưa thanh toán', hoặc 'chấp nhận, không mất phí'.");
+            if (request.Status != 0 && request.Status != 1 && request.Status != 2 && request.Status != 8)
+                return BadRequest("Chỉ có thể hủy từ trạng thái 'chưa chấp nhận', 'chưa thanh toán', 'đã thanh toán', hoặc 'chấp nhận, không mất phí'.");
 
             var history = await _context.Histories
                 .FirstOrDefaultAsync(h => h.RequestId == requestId);
 
             try
-            {
+            {// Create a refund transaction if the request status is 2 (paid)
+                if (request.Status == 2)
+                {
+                    var transaction = new Transaction
+                    {
+                        RequestId = request.RequestId,
+                        TransactionType = 1, // Refund
+                        Amount = request.DepositAmount + request.RentalFee,
+                        FromUserId = null,
+                        ToUserId = request.UserId, // borrower
+                        Status = 0, // Pending
+                        CreatedAt = DateTime.Now,
+                        UpdatedAt = DateTime.Now
+                    };
+                    _context.Transactions.Add(transaction);
+                }
                 request.Status = 6;
                 request.Product.Available = 0;
 
@@ -830,6 +870,23 @@ namespace ToySharingAPI.Controllers
                         ReturnDate = DateTime.Now,
                     };
                     _context.Histories.Add(history);
+                }
+
+                // Create a refund transaction if the request status is 2 (paid)
+                if (request.Status == 2)
+                {
+                    var transaction = new Transaction
+                    {
+                        RequestId = request.RequestId,
+                        TransactionType = 1, // Refund
+                        Amount = request.DepositAmount + request.RentalFee,
+                        FromUserId = null,
+                        ToUserId = request.UserId, // borrower
+                        Status = 0, // Pending
+                        CreatedAt = DateTime.Now,
+                        UpdatedAt = DateTime.Now
+                    };
+                    _context.Transactions.Add(transaction);
                 }
 
                 await _context.SaveChangesAsync();
