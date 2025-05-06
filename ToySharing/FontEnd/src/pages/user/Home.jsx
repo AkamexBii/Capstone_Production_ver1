@@ -623,8 +623,10 @@ const Home = () => {
     setSelectedToyId(toyId);
     const today = new Date();
     today.setHours(12, 0, 0, 0);
+    const nextday = new Date();
+    nextday.setDate(today.getDate() + 1);
     setBorrowStart(today);
-    setBorrowEnd(today);
+    setBorrowEnd(nextday);
     setNote("");
     setShowBorrowModal(true);
   };
@@ -710,8 +712,6 @@ const Home = () => {
         },
       });
 
-      setToyList((prevList) => prevList.filter((toy) => toy.id !== selectedToyId));
-      setFilteredToyList((prevList) => prevList.filter((toy) => toy.id !== selectedToyId));
       setUserRequests((prev) => [...prev, response.data]);
       toast.success("Gửi yêu cầu mượn thành công!");
       handleCloseBorrowModal();

@@ -17,7 +17,7 @@ const TransferHistory = () => {
   const [activeLink, setActiveLink] = useState("transferhistory");
   const [selectedStatus, setSelectedStatus] = useState("");
   const [transferData, setTransferData] = useState([]);
-  const [visibleItems, setVisibleItems] = useState(6);
+  const [visibleItems, setVisibleItems] = useState(4);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [profileData, setProfileData] = useState(null);
   const [showRatingModal, setShowRatingModal] = useState(false);
@@ -127,7 +127,7 @@ const TransferHistory = () => {
   }, [transferData]);
 
   const handleLoadMore = () => {
-    setVisibleItems((prev) => prev + 3);
+    setVisibleItems((prev) => prev + 4);
   };
 
   const handleViewProfile = async (partnerId) => {

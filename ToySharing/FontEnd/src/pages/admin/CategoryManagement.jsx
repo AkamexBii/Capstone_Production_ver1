@@ -20,7 +20,9 @@ const CategoryManagement = () => {
     });
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage] = useState(5); // Số danh mục mỗi trang
+    const [itemsPerPage] = useState(5);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [categoryToDelete, setCategoryToDelete] = useState(null);
 
     const menuItems = [
         { id: 1, label: "Trang chủ", link: "/adminpage" },
@@ -57,7 +59,7 @@ const CategoryManagement = () => {
             if (error.response?.status === 401) {
                 toast.error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn.");
             } else {
-                toast.error("Lỗi khi tải danh sách danh mục. Vui lòng thử lại.");
+                toast.error("Không thể xóa vì đang có đồ chơi sử dụng danh mục n.");
             }
         } finally {
             setLoading(false);
@@ -96,20 +98,70 @@ const CategoryManagement = () => {
         setShowModal(true);
     };
 
-    const handleDeleteCategory = async (id) => {
+    const handleDeleteClick = (category) => {
+        setCategoryToDelete(category);
+        setShowDeleteModal(true);
+    };
+
+    const handleDeleteCategory = async () => {
+        if (!categoryToDelete) return;
+
+        const id = categoryToDelete.categoryId;
         try {
-            await axios.delete(`${apiUrl}/api/admin/categories/${id}`, {
-                headers: { Authorization: `Bearer ${localStorage.getItem("token") || sessionStorage.getItem("token")}` },
-            });
-            toast.success("Xóa danh mục thành công!");
-            fetchCategories();
-        } catch (error) {
-            console.error("Error deleting category:", error);
-            if (error.response?.status === 401) {
-                toast.error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn.");
-            } else {
-                toast.error("Lỗi khi xóa danh mục. Vui lòng thử lại.");
+            const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+
+            // Check if any products are associated with the category
+            let productCheckResponse;
+            try {
+                console.log(`Checking products for category ID: ${id}`);
+                productCheckResponse = await axios.get(`${apiUrl}/api/admin/categories/${id}/products`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                console.log(`Product check response:`, productCheckResponse.data);
+            } catch (checkError) {
+                console.error(`Error checking products for category ${id}:`, checkError);
+                if (checkError.response?.status === 404) {
+                    // Category not found, proceed with deletion attempt
+                    console.log(`Category ${id} not found in product check, attempting deletion`);
+                } else {
+                    toast.error("Lỗi khi kiểm tra đồ chơi liên quan đến danh mục.");
+                    setShowDeleteModal(false);
+                    return;
+                }
             }
+
+            if (productCheckResponse?.data && Array.isArray(productCheckResponse.data) && productCheckResponse.data.length > 0) {
+                toast.error(`Không thể xóa danh mục "${categoryToDelete.categoryName}" vì đã có đồ chơi sử dụng danh mục này.`);
+                setShowDeleteModal(false);
+                return;
+            }
+
+            // Proceed with deletion
+            try {
+                console.log(`Deleting category ID: ${id}`);
+                await axios.delete(`${apiUrl}/api/admin/categories/${id}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                toast.success(`Xóa danh mục "${categoryToDelete.categoryName}" thành công!`);
+                fetchCategories();
+            } catch (deleteError) {
+                console.error(`Error deleting category ${id}:`, deleteError);
+                if (deleteError.response?.status === 404) {
+                    toast.error(`Danh mục "${categoryToDelete.categoryName}" không tồn tại hoặc đã bị xóa.`);
+                } else if (deleteError.response?.status === 401) {
+                    toast.error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn.");
+                } else if (deleteError.response?.status === 400) {
+                    toast.error(deleteError.response.data.message || `Không thể xóa danh mục "${categoryToDelete.categoryName}".`);
+                } else {
+                    toast.error(`Lỗi khi xóa danh mục "${categoryToDelete.categoryName}". Vui lòng thử lại.`);
+                }
+            }
+        } catch (error) {
+            console.error("Unexpected error during category deletion:", error);
+            toast.error("Lỗi không xác định khi xóa danh mục. Vui lòng thử lại.");
+        } finally {
+            setShowDeleteModal(false);
+            setCategoryToDelete(null);
         }
     };
 
@@ -120,7 +172,7 @@ const CategoryManagement = () => {
         }
 
         const data = {
-            categoryName: formData.categoryName,
+            categoryName: formData.categoryName.trim(),
         };
 
         try {
@@ -147,6 +199,11 @@ const CategoryManagement = () => {
             console.error("Error saving category:", error);
             if (error.response?.status === 401) {
                 toast.error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn.");
+            } else if (error.response?.status === 409 || 
+                       (error.response?.status === 500 && 
+                        error.response.data?.message?.toLowerCase().includes("unique constraint") || 
+                        error.response.data?.message?.toLowerCase().includes("duplicate"))) {
+                toast.error("Danh mục đã tồn tại. Vui lòng chọn tên khác.");
             } else {
                 toast.error("Lỗi khi lưu danh mục. Vui lòng thử lại.");
             }
@@ -212,7 +269,7 @@ const CategoryManagement = () => {
                                                     </Button>{" "}
                                                     <Button
                                                         variant="danger"
-                                                        onClick={() => handleDeleteCategory(category.categoryId)}
+                                                        onClick={() => handleDeleteClick(category)}
                                                     >
                                                         Xóa
                                                     </Button>
@@ -280,6 +337,25 @@ const CategoryManagement = () => {
                     </div>
                 </Modal.Body>
             </Modal>
+
+            <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Xác nhận xóa danh mục</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <p>Bạn có chắc chắn muốn xóa danh mục "{categoryToDelete?.categoryName}" không?</p>
+                    <p><strong>Lưu ý:</strong> Danh mục chỉ có thể xóa nếu không có đồ chơi nào sử dụng nó.</p>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+                        Hủy
+                    </Button>
+                    <Button variant="danger" onClick={handleDeleteCategory}>
+                        Xóa
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
             <ToastContainer
                 position="top-right"
                 autoClose={3000}

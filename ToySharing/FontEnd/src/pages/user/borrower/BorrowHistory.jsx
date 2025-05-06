@@ -36,6 +36,7 @@ const BorrowHistory = () => {
   const [isSending, setIsSending] = useState(false);
   const [userRequests, setUserRequests] = useState([]);
   const [mainUserId, setMainUserId] = useState(null);
+  const [visibleItems, setVisibleItems] = useState(4);
 
   const sideMenuItems = [
     { id: 1, label: "Tìm kiếm đồ chơi", link: "/searchtoy" },
@@ -300,8 +301,10 @@ const BorrowHistory = () => {
     return (history.status === 1 || history.status === 2) && statusMatch;
   });
 
+  const visibleHistories = filteredHistories.slice(0, visibleItems);
+
   const handleLoadMore = () => {
-    toast.info("Đã hiển thị tất cả lịch sử!");
+    setVisibleItems((prev) => prev + 4);
   };
 
   return (
@@ -339,8 +342,8 @@ const BorrowHistory = () => {
               </Col>
             </Row>
             <Row className="request-items-section">
-              {filteredHistories.length > 0 ? (
-                filteredHistories.map((history) => {
+              {visibleHistories.length > 0 ? (
+                visibleHistories.map((history) => {
                   const hasSentRequest = userRequests.some(
                     (req) =>
                       req.productId === history.productId &&
@@ -435,7 +438,7 @@ const BorrowHistory = () => {
                 </Col>
               )}
             </Row>
-            {filteredHistories.length > 0 && (
+            {visibleHistories.length < filteredHistories.length && (
               <div className="text-center mt-4">
                 <Button
                   variant="outline-primary"

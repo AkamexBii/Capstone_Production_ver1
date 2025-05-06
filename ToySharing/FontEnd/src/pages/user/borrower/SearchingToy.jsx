@@ -161,6 +161,7 @@ const SearchingToy = () => {
     district: "",
     city: "",
   });
+  const [visibleItems, setVisibleItems] = useState(4);
 
   const sideMenuItems = [
     { id: 1, label: "Tìm kiếm đồ chơi", link: "/searchtoy" },
@@ -461,8 +462,10 @@ const SearchingToy = () => {
     setSelectedToyId(toyId);
     const today = new Date();
     today.setHours(12, 0, 0, 0);
+    const nextday = new Date();
+    nextday.setDate(today.getDate() + 1);
     setBorrowStart(today);
-    setBorrowEnd(today);
+    setBorrowEnd(nextday);
     setNote("");
     setShowBorrowModal(true);
   };
@@ -667,7 +670,7 @@ const SearchingToy = () => {
   };
 
   const handleLoadMore = () => {
-    toast.info("Đã hiển thị tất cả đồ chơi!");
+    setVisibleItems((prev) => prev + 4);
   };
 
   const filteredToys = toys
@@ -708,6 +711,8 @@ const SearchingToy = () => {
       }
       return new Date(b.createdAt) - new Date(a.createdAt);
     });
+
+  const visibleToys = filteredToys.slice(0, visibleItems);
 
   if (!Array.isArray(toys)) {
     return (
@@ -778,12 +783,12 @@ const SearchingToy = () => {
               </div>
             </div>
             <Row className="request-items-section">
-              {filteredToys.length === 0 ? (
+              {visibleToys.length === 0 ? (
                 <Col className="text-center">
                   <h5>Không có đồ chơi nào để hiển thị</h5>
                 </Col>
               ) : (
-                filteredToys.map((toy) => {
+                visibleToys.map((toy) => {
                   const hasSentRequest = userRequests.some(
                     (req) =>
                       req.productId === toy.productId &&
@@ -888,7 +893,7 @@ const SearchingToy = () => {
                 })
               )}
             </Row>
-            {filteredToys.length > 0 && (
+            {visibleToys.length < filteredToys.length && (
               <div className="text-center">
                 <Button
                   variant="outline-primary"

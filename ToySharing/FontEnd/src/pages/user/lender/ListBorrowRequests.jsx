@@ -132,7 +132,7 @@ const ListBorrowRequests = () => {
   }, [requests]);
 
   const handleLoadMore = () => {
-    setVisibleItems((prev) => prev + 3);
+    setVisibleItems((prev) => prev + 4);
   };
 
   const handleViewMessage = (message) => {

@@ -112,7 +112,7 @@ const MyToy = () => {
   ];
 
   const [toys, setToys] = useState([]);
-  const [visibleItems, setVisibleItems] = useState(6);
+  const [visibleItems, setVisibleItems] = useState(4);
   const [showFilter, setShowFilter] = useState(false);
   const [filterValues, setFilterValues] = useState({
     name: "",
@@ -439,7 +439,7 @@ const MyToy = () => {
   };
 
   const handleLoadMore = () => {
-    setVisibleItems((prev) => prev + 3);
+    setVisibleItems((prev) => prev + 4);
   };
 
   const handleAddToy = () => {
